@@ -25,7 +25,7 @@ if not os.path.exists(textFname):
     exit()
     
 #execute the program with 
-subprocess.call(["python3", "./wordCount.py", textFname, outputFname])
+subprocess.call(["py", "./wordCount.py", textFname, outputFname])
 
 #make sure output file exists
 if not os.path.exists(outputFname):
