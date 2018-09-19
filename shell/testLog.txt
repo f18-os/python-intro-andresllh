@@ -1,0 +1,31 @@
+FAILED: no parameter, full pathname
+  /bin/uname
+FAILED: two commands, full pathname
+  /bin/uname 
+ /bin/uname
+FAILED: two commands, blank line in-between, full pathname
+  /bin/uname 
+
+ /bin/uname
+FAILED: no parameter, no pathname
+  uname
+FAILED: one parameter, full pathname
+  /bin/cat /etc/passwd
+FAILED: one parameter, no pathname
+  cat /etc/passwd
+FAILED: pipe
+  cat /etc/passwd | sort 
+FAILED: 2 pipes
+  cat /etc/passwd | sort | wc 
+FAILED: redirect input
+  cat < /etc/passwd
+FAILED: redirect output
+  uname > /tmp/x 
+ cat /tmp/x
+FAILED: background
+  bash < /tmp/c1 &
+ echo 2 
+ sleep 3
+FAILED: change dir
+  cd .. 
+ pwd

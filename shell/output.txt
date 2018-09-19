@@ -1,0 +1,4 @@
+  6  18 115 input.txt
+  6  18 115 >
+  2   8  36 output.txt
+ 14  44 266 total
