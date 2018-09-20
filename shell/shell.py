@@ -27,22 +27,43 @@ def main():
 
                 import fileinput
                 print("About to fork (pid=%d)" % pid)
+                args = arg.split()
                 if rc == 0:
-                    args = arg.split()
-                    os.close(1)                 # redirect child's stdout
+                    os.close(1) 
                     os.dup(pw)
+ 
                     for fd in (pr, pw):
                         os.close(fd)
-                    print("hello from child")
-                            
+                                            
+                    for dir in re.split(":", os.environ['PATH']): # try each directory in the path
+                        program = "%s/%s" % (dir, args[0])
+                        try:
+                            # error of bad file descriptor here
+                            os.execve(program, args, os.environ) # try to exec program
+                        except FileNotFoundError:             # ...expected
+                            pass
+                    
                 else:                           # parent (forked ok)
+                    childPidCode = os.wait()
                     print("Parent: My pid==%d.  Child's pid=%d" % (os.getpid(), rc), file=sys.stderr)
                     os.close(0)
-                    os.dup(pr)
+                    os.dup(pr) # is it the output of the first part of the pipe?
                     for fd in (pw, pr):
                         os.close(fd)
-                    for line in fileinput.input():
-                        print("From child: <%s>" % line)
+                    rc = os.fork()
+                    if rc == 0:
+                        for dir in re.split(":", os.environ['PATH']): # try each directory in the path
+                            program = "%s/%s" % (dir, args[3])
+                            try:
+                                os.execve(program, args, os.environ) # try to exec program
+                            except FileNotFoundError:             # ...expected
+                                pass
+                            
+                    else:
+                        childPidCode = os.wait()
+                        
+                    #for line in fileinput.input():
+                        #print("From child: <%s>" % line)
             elif '>' in arg:
                 print('redirecting output')
                 print(arg.split())
@@ -58,14 +79,12 @@ def main():
                             os.execve(program, args, os.environ) # try to exec program
                         except FileNotFoundError:             # ...expected
                             pass    
-                    os.write(2, ("Child:    Error: Could not exec %s\n" % args[0]).encode())
                     sys.exit(1)                 # terminate with error
                 else:                           # parent (forked ok)
                     os.write(1, ("Parent: My pid=%d.  Child's pid=%d\n" % 
                                 (pid, rc)).encode())
                     childPidCode = os.wait()
-                    os.write(1, ("Parent: Child %d terminated with exit code %d\n" % 
-                                childPidCode).encode())
+
                                 
             elif '<' in arg:
                 print('redirecting input')
