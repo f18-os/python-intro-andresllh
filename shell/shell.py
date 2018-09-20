@@ -18,55 +18,51 @@ def main():
         else:
             pid = os.getpid() 
             if '|' in arg:
-                pr,pw = os.pipe()
                 rc = os.fork()
-                for f in (pr, pw):
-                    os.set_inheritable(f, True)
-                
-                print("pipe fds: pr=%d, pw=%d" % (pr, pw))
-
                 import fileinput
                 print("About to fork (pid=%d)" % pid)
                 args = arg.split()
                 if rc == 0:
-                    os.close(1) 
-                    os.dup(pw)
- 
-                    for fd in (pr, pw):
-                        os.close(fd)
-                                            
-                    for dir in re.split(":", os.environ['PATH']): # try each directory in the path
-                        program = "%s/%s" % (dir, args[0])
-                        try:
-                            # error of bad file descriptor here
-                            os.execve(program, args, os.environ) # try to exec program
-                        except FileNotFoundError:             # ...expected
-                            pass
-                    
-                else:                           # parent (forked ok)
-                    childPidCode = os.wait()
-                    print("Parent: My pid==%d.  Child's pid=%d" % (os.getpid(), rc), file=sys.stderr)
-                    os.close(0)
-                    os.dup(pr) # is it the output of the first part of the pipe?
-                    for fd in (pw, pr):
-                        os.close(fd)
-                    rc = os.fork()
-                    if rc == 0:
+                    pr, pw= os.pipe()
+                    for f in (pr, pw):
+                        os.set_inheritable(f, True)
+                    pc = os.fork()
+                    if pc == 0:
+                        os.close(1) 
+                        os.dup(pw)
+                        os.set_inheritable(1, True)
+                        for fd in (pr, pw):
+                            os.close(fd)
+                        f_args = [args[0], args[1]]
+                        for dir in re.split(":", os.environ['PATH']): # try each directory in the path
+                            program = "%s/%s" % (dir, args[0])
+                            try:
+                                # error of bad file descriptor here
+                                os.execve(program, f_args, os.environ) # try to exec program
+                            except FileNotFoundError:             # ...expected
+                                pass
+                    else:
+                        os.close(0)
+                        os.dup(pr)
+                        os.set_inheritable(0, True)
+                        for fd in (pr, pw):
+                            os.close(fd)
+                        s_args = [args[3]]
                         for dir in re.split(":", os.environ['PATH']): # try each directory in the path
                             program = "%s/%s" % (dir, args[3])
                             try:
-                                os.execve(program, args, os.environ) # try to exec program
+                                # error of bad file descriptor here
+                                os.execve(program, s_args, os.environ) # try to exec program
                             except FileNotFoundError:             # ...expected
                                 pass
-                            
-                    else:
-                        childPidCode = os.wait()
+                    
+                else:
+                    childPidCode = os.wait()
                         
                     #for line in fileinput.input():
                         #print("From child: <%s>" % line)
             elif '>' in arg:
                 print('redirecting output')
-                print(arg.split())
                 rc = os.fork()
                 if rc == 0:
                     os.close(1)                 # redirect child's stdout
@@ -92,7 +88,7 @@ def main():
                 if rc == 0:
                     os.close(0)                 # redirect child's stdin
                     args = arg.split()
-                    sys.stdin = open(args[2], "w")
+                    sys.stdin = open(args[1], "w")
                     os.set_inheritable(0, True)                    
                     for dir in re.split(":", os.environ['PATH']): # try each directory in path
                         program = "%s/%s" % (dir, args[0])
