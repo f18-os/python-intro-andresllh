@@ -12,9 +12,25 @@ def main():
         if arg == 'exit':
             return
         
+        if "cd" in arg:
+            args = arg.split()
+            
+            if args[0].strip() == "cd":
+                if len(args) < 2:
+                    continue
+                if args[1].strip() == "..":
+                    curr = os.getcwd()
+                    next_dir = curr.rsplit('/', 1)[0]
+                    os.chdir(next_dir)
+                    continue
+                else:
+                    os.chdir(args[1].strip())
+                    continue
+        
         elif arg == '':
             continue
-
+        
+        
         else:
             pid = os.getpid() 
             if '|' in arg:
