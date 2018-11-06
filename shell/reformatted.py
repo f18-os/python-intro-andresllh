@@ -4,6 +4,55 @@ import re
 import os
 import subprocess
 
+
+
+def main():
+    while(True):
+        arg = input(os.environ['PS1'] + '$')
+        if "/bin/" in arg:
+            arg = arg.replace("/bin/", "")
+        
+        if arg == 'exit':
+            return
+        
+        if "cd" in arg:
+            args = arg.split()
+            
+            if args[0].strip() == "cd":
+                if len(args) < 2:
+                    continue
+                if args[1].strip() == "..":
+                    curr = os.getcwd()
+                    next_dir = curr.rsplit('/', 1)[0]
+                    os.chdir(next_dir)
+                    continue
+                else:
+                    os.chdir(args[1].strip())
+                    continue
+        
+        elif arg == '':
+            continue
+        
+        
+        else:
+            pid = os.getpid() 
+            if '|' in arg:
+                pipe(arg)
+                        
+ 
+            elif '>' in arg:
+                redirect_output(arg)
+
+                          
+                          
+            elif '<' in arg:
+                redirect_input(arg)
+        
+        
+            else:
+                execute_command(arg)
+
+
 def execute_command(arg):
     rc = os.fork()
     if rc == 0:
@@ -114,55 +163,7 @@ def redirect_output(arg):
                     (pid, rc)).encode())
         childPidCode = os.wait()
     return
-
-
-
-
-def main():
-    while(True):
-        arg = input(os.environ['PS1'] + '$')
-        if "/bin/" in arg:
-            arg = arg.replace("/bin/", "")
-        
-        if arg == 'exit':
-            return
-        
-        if "cd" in arg:
-            args = arg.split()
-            
-            if args[0].strip() == "cd":
-                if len(args) < 2:
-                    continue
-                if args[1].strip() == "..":
-                    curr = os.getcwd()
-                    next_dir = curr.rsplit('/', 1)[0]
-                    os.chdir(next_dir)
-                    continue
-                else:
-                    os.chdir(args[1].strip())
-                    continue
-        
-        elif arg == '':
-            continue
-        
-        
-        else:
-            pid = os.getpid() 
-            if '|' in arg:
-                pipe(arg)
-                        
- 
-            elif '>' in arg:
-                redirect_output(arg)
-
-                          
-                          
-            elif '<' in arg:
-                redirect_input(arg)
-        
-        
-            else:
-                execute_command(arg)
+    
 
 os.environ['PS1'] = ''                    
 main()
